@@ -76,6 +76,10 @@ void checkFresh(Bitmap& bitmap, double seconds) {
     }
 }
 void run() {
+    // Keep clock and ETA glyphs identical across machines and repeated runs.
+    _putenv_s("TZ", "UTC0");
+    _tzset();
+    wallNow = 1792321200;
     // Validate packaged recordings without opening an audio device.
     WAVEFORMATEX format{}; std::vector<BYTE> music;
     check(!audio::readMusic(L"missing-track.wav", format, music), "missing music fails gracefully");
