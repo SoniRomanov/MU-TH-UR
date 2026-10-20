@@ -76,6 +76,43 @@ void checkFresh(Bitmap& bitmap, double seconds) {
     }
 }
 void run() {
+    // Validate packaged recordings without opening an audio device.
+    WAVEFORMATEX format{}; std::vector<BYTE> music;
+    check(!audio::readMusic(L"missing-track.wav", format, music), "missing music fails gracefully");
+    wchar_t executable[32768]{};
+    check(GetModuleFileNameW(nullptr, executable, 32768) > 0, "locate packaged audio");
+    const auto recordings = audio::loadKeys(std::filesystem::path(executable).parent_path() / L"assets" / L"keys");
+    check(recordings.size() == 32, "all 32 recorded key sounds are packaged and readable");
+    for (const auto& key : recordings) {
+        check(key.format.nChannels == 1 && key.format.nSamplesPerSec == 44100,
+            "preserve original key recording format");
+        check(!key.samples.empty() && key.samples.size() < 44100,
+            "individual keystrokes remain short");
+        check(std::any_of(key.samples.begin(), key.samples.end(), [](BYTE sample) { return sample != 0; }),
+            "key recording contains audio");
+    }
+    check(recordings.front().samples != recordings.back().samples, "recorded keystroke variations are distinct");
+    check(audio::loadKeys(L"missing-key-folder").empty(), "missing keys are silent without synthesized fallback");
+    check(audio::readMusic(std::filesystem::path(executable).parent_path() /
+        L"assets" / L"The Conch Call.wav", format, music), "packaged music loads through RIFF metadata");
+    check(format.nChannels == 2 && format.nSamplesPerSec == 48000 && music.size() > 1000000,
+        "music preserves stereo PCM payload");
+    flickerEnabled = true;
+    for (int i = 0; i < 1000; ++i)
+        check(flickerAt(i / 30.0) >= 0 && flickerAt(i / 30.0) <= 3, "flicker stays subtle");
+    seed(1);
+    Bitmap steady(900, 540, PixelFormat32bppARGB), drift(900, 540, PixelFormat32bppARGB);
+    flickerEnabled = false; paint(steady, .2);
+    flickerEnabled = true;
+    check(needsRepaint(.2), "flicker change repaints a cached scene");
+    paint(drift, .2);
+    const auto flickerDifference = compareRenders(pixels(steady), pixels(drift));
+    check(flickerDifference.pixels > 0 && flickerDifference.largest <= 3 &&
+        !flickerDifference.alphaChanged, "flicker changes brightness gently without transparency");
+    flickerEnabled = false;
+    check(needsRepaint(.2), "disabling flicker restores steady display");
+    paint(drift, .2);
+    check(pixels(steady) == pixels(drift), "disabled flicker restores exact cached pixels");
     // Ensure the independent-render allowance cannot hide a missing glyph,
     // a shifted image, a broad colour change, or altered transparency.
     std::vector<std::uint8_t> reference(10000 * 4, 100), changed = reference;

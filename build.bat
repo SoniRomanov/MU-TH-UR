@@ -13,15 +13,21 @@ call "%VSROOT%\Common7\Tools\VsDevCmd.bat" -arch=x64 -host_arch=x64
 if errorlevel 1 exit /b 1
 :compile
 if not exist build mkdir build
+if not exist build\assets mkdir build\assets
+copy /y "assets\The Conch Call.wav" "build\assets\The Conch Call.wav" >nul
+if errorlevel 1 exit /b 1
+if not exist build\assets\keys mkdir build\assets\keys
+copy /y "assets\keys\*.wav" "build\assets\keys\" >nul
+if errorlevel 1 exit /b 1
 powershell -NoProfile -ExecutionPolicy Bypass -File scripts\write-version.ps1 -OutputDirectory build\generated
 if errorlevel 1 exit /b 1
-cl /nologo /std:c++17 /EHsc /W4 /utf-8 /O2 /MT /DUNICODE /D_UNICODE /DNOMINMAX /Ibuild\generated src\main.cpp /Fobuild\main.obj /Febuild\MU-TH-UR.exe /link /SUBSYSTEM:WINDOWS gdiplus.lib user32.lib gdi32.lib
+cl /nologo /std:c++17 /EHsc /W4 /utf-8 /O2 /MT /DUNICODE /D_UNICODE /DNOMINMAX /Ibuild\generated src\main.cpp /Fobuild\main.obj /Febuild\MU-TH-UR.exe /link /SUBSYSTEM:WINDOWS gdiplus.lib user32.lib gdi32.lib xaudio2.lib ole32.lib
 if errorlevel 1 exit /b 1
 cl /nologo /std:c++17 /EHsc /W4 /O2 /MT tests\console_tests.cpp /Fobuild\tests.obj /Febuild\console_tests.exe
 if errorlevel 1 exit /b 1
 build\console_tests.exe
 if errorlevel 1 exit /b 1
-cl /nologo /std:c++17 /EHsc /W4 /utf-8 /O2 /MT /DUNICODE /D_UNICODE /DNOMINMAX /Ibuild\generated tests\render_tests.cpp /Fobuild\render_tests.obj /Febuild\render_tests.exe /link /SUBSYSTEM:CONSOLE gdiplus.lib user32.lib gdi32.lib
+cl /nologo /std:c++17 /EHsc /W4 /utf-8 /O2 /MT /DUNICODE /D_UNICODE /DNOMINMAX /Ibuild\generated tests\render_tests.cpp /Fobuild\render_tests.obj /Febuild\render_tests.exe /link /SUBSYSTEM:CONSOLE gdiplus.lib user32.lib gdi32.lib xaudio2.lib ole32.lib
 if errorlevel 1 exit /b 1
 build\render_tests.exe
 if errorlevel 1 exit /b 1

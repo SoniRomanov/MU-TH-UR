@@ -13,6 +13,7 @@
 #include "save.h"
 #include "crt_filter.h"
 #include "display_finish.h"
+#include "audio.h"
 
 using namespace Gdiplus;
 namespace {
@@ -33,6 +34,14 @@ std::int64_t wallNow = std::time(nullptr);
 size_t historyIndex = 0;
 int scrollOffset = 0, maxScroll = 0;
 bool fullscreen = false;
+audio::Engine sound;
+bool flickerEnabled = true;
+int lastFlicker = -1;
+int flickerAt(double seconds) {
+    // A maximum 1.2% brightness drift; no flashes or abrupt black frames.
+    return flickerEnabled ? static_cast<int>(3 * (.5 + .3 * std::sin(seconds * 2.1) +
+        .2 * std::sin(seconds * 5.3))) : 0;
+}
 ULONGLONG startTime = 0;
 ULONGLONG lastAdvance = 0;
 WINDOWPLACEMENT placement{sizeof(WINDOWPLACEMENT)};
@@ -242,7 +251,8 @@ bool cursorAt(double seconds) {
 }
 bool needsRepaint(double seconds) {
     const auto scene = sceneAt(seconds);
-    return !hasPresented || !(scene == cachedScene) || cursorAt(seconds) != lastCursor;
+    return !hasPresented || !(scene == cachedScene) || cursorAt(seconds) != lastCursor ||
+        flickerAt(seconds) != lastFlicker;
 }
 void renderFlat(Graphics& g, int width, int height, const Scene& scene, bool cursor) {
     g.Clear(Color(255, 0, 0, 0));
@@ -352,6 +362,12 @@ void render(Graphics& g, int width, int height, double seconds) {
     g.SetPixelOffsetMode(PixelOffsetModeHalf);
     g.DrawImage(completed.get(), Rect(0, 0, width, height), 0, 0, width, height, UnitPixel);
     g.Restore(saved);
+    const int flicker = flickerAt(seconds);
+    if (flicker) {
+        SolidBrush shade(Color(static_cast<BYTE>(flicker), 0, 0, 0));
+        g.FillRectangle(&shade, 0, 0, width, height);
+    }
+    lastFlicker = flicker;
     hasPresented = true; lastCursor = cursor;
 }
 void releaseSurfaces() {
@@ -409,10 +425,12 @@ LRESULT CALLBACK windowProc(HWND window, UINT message, WPARAM wParam, LPARAM lPa
         }
         InvalidateRect(window, nullptr, FALSE); return 0;
     case WM_CHAR:
-        if (wParam == '\r') submit(window);
-        else if (wParam == '\b' && !input.empty()) input.pop_back();
-        else if (wParam >= 32 && wParam < 127 && input.size() < 240)
+        if (wParam == '\r') { sound.key(true); submit(window); }
+        else if (wParam == '\b' && !input.empty()) { sound.key(); input.pop_back(); }
+        else if (wParam >= 32 && wParam < 127 && input.size() < 240) {
+            sound.key();
             input += static_cast<char>(std::toupper(static_cast<unsigned char>(wParam)));
+        }
         InvalidateRect(window, nullptr, FALSE); return 0;
     case WM_KEYDOWN:
         if (wParam == 'V' && (GetKeyState(VK_CONTROL) & 0x8000)) SendMessage(window, WM_PASTE, 0, 0);
@@ -479,11 +497,16 @@ int WINAPI wWinMain(HINSTANCE instance, HINSTANCE, PWSTR commandLine, int show) 
         CW_USEDEFAULT, CW_USEDEFAULT, rect.right - rect.left, rect.bottom - rect.top,
         nullptr, nullptr, instance, nullptr);
     if (!window) { GdiplusShutdown(token); return 1; }
+    wchar_t executable[32768]{};
+    const DWORD pathLength = GetModuleFileNameW(nullptr, executable, 32768);
+    if (pathLength && pathLength < 32768)
+        sound.start(std::filesystem::path(executable).parent_path() / L"assets" / L"The Conch Call.wav");
     toggleFullscreen(window);
     ShowWindow(window, show); UpdateWindow(window);
     MSG message{}; int result;
     while ((result = GetMessage(&message, nullptr, 0, 0)) > 0) { TranslateMessage(&message); DispatchMessage(&message); }
     releaseSurfaces();
+    sound.stop();
     GdiplusShutdown(token);
     return result == -1 ? 1 : static_cast<int>(message.wParam);
 }

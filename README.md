@@ -6,6 +6,10 @@ an unsettlingly calm computer. You are a human communications officer aboard
 the survey ship **Kestrel**. An expedition missing for nineteen years has
 started transmitting from a planet outside your assigned route.
 
+**Prototype story disclaimer:** The current story, characters, dialogue, and
+mission progression are placeholder content for testing the game experience.
+They do not represent the final story and may change or be replaced.
+
 The first playable episode takes you from intercepting that signal through
 mission diversion, orbital reconnaissance, and a landing team's investigation
 of Station 04. It ends at the expedition's transmitter. The deeper investigation
@@ -18,6 +22,7 @@ newer with **Desktop development with C++**. No downloaded libraries, API keys,
 accounts, or network connection are needed.
 
 The app opens fullscreen. **Escape** returns to a window; **F11** toggles fullscreen.
+Keep the `assets` folder beside the executable when moving or distributing the build.
 
 Alternatively, with CMake and a Windows C++ toolchain:
 
@@ -55,9 +60,8 @@ controls. The landing team acts on your instructions and reports back.
 
 Reconnaissance, equipment checks, and power decisions change crew condition,
 evidence, dialogue, elapsed mission time, and the state you leave the station
-in. Story choices use exact commands and numbered responses; this is authored
-interactive fiction, not a generative chatbot or a general natural-language
-assistant. All people, telemetry, and events are fictional.
+in. Story choices use exact commands and numbered responses in an authored
+interactive story. All people, telemetry, and events are fictional.
 
 ## Saved progress
 
@@ -85,7 +89,16 @@ sill. Reflections sampled from the live screen fall across the inner walls.
 The housing and CRT filter are original project code: bowed geometry, softened
 scanlines, a subtle phosphor texture, edge shading, and a gentle midtone lift.
 The filter runs at final display resolution. No external shaders or graphics
-assets are bundled. Appearance is fixed; there are no effect controls.
+assets are bundled. A very slight brightness drift gives the display a live CRT
+feel. Audio and display effects are fixed parts of the experience.
+
+## Sound
+
+`assets/The Conch Call.wav` loops quietly underneath the console. Typing and
+backspace play the 32 recordings in `assets/keys`, varied without immediate repeats;
+Enter plays them slightly deeper and louder. Audio is loaded relative to the executable, so launching from another
+folder works. Missing music or an unavailable audio device does not prevent play.
+Snapshots and tests never start audio playback.
 
 ## Development
 
@@ -144,8 +157,8 @@ To contribute code or documentation:
    link any related issue. The maintainer reviews changes before merging.
 
 Keep the app offline and use original code and examples. Do not introduce
-external models, datasets, libraries, copied shaders, or movie assets/dialogue.
-Leave generated builds and local assistant metadata out of pull requests.
+external libraries, copied shaders, or movie assets/dialogue.
+Leave generated builds and local development settings out of pull requests.
 
 By submitting a contribution, you agree to license it under this project's
 [MIT License](LICENSE). Submit only work you have the right to license this
