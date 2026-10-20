@@ -1,0 +1,29 @@
+# Copyright (C) 2026 Soni Romanov
+# SPDX-License-Identifier: MIT
+name: Build Windows console
+on: [push, pull_request, workflow_dispatch]
+permissions:
+  contents: read
+jobs:
+  windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+      - name: Configure
+        run: cmake -S . -B build -A x64
+      - name: Build
+        run: cmake --build build --config Release
+      - name: Test
+        run: ctest --test-dir build -C Release --output-on-failure --repeat until-fail:3
+      - name: Package matching source
+        run: git archive --format=zip --prefix=MU-TH-UR-source/ --output=build/MU-TH-UR-source.zip HEAD
+      - uses: actions/upload-artifact@v6
+        with:
+          name: MU-TH-UR-Windows
+          path: |
+            build/Release/MU-TH-UR.exe
+            build/MU-TH-UR-source.zip
+            LICENSE
+            README.md

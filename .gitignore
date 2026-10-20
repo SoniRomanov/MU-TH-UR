@@ -1,0 +1,35 @@
+/build/
+/preview.png
+/preview-story.png
+/preview-task.png
+*.obj
+*.pdb
+*.ilk
+.vs/
+
+# Local assistant instructions, settings, and conversation history
+AGENTS.md
+AGENTS.override.md
+AGENTS.local.md
+CLAUDE.md
+CLAUDE.local.md
+GEMINI.md
+SKILL.md
+.agents/
+.codex/
+.claude/
+.cursor/
+.cursorrules
+.windsurf/
+.windsurfrules
+.aider*
+.copilot/
+.github/copilot-instructions.md
+.github/instructions/
+.github/prompts/
+.github/agents/
+
+# Local credentials and environment configuration
+.env
+.env.*
+!.env.example
