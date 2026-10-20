@@ -1,7 +1,7 @@
 # Copyright (C) 2026 Soni Romanov
 # SPDX-License-Identifier: MIT
 cmake_minimum_required(VERSION 3.20)
-project(MUTHUR VERSION 0.0.5 LANGUAGES CXX)
+project(MUTHUR VERSION 0.0.6 LANGUAGES CXX)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
