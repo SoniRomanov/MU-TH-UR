@@ -61,6 +61,9 @@ bool equivalentRenders(const RenderDifference& difference, size_t pixelCount) {
 }
 void checkFresh(Bitmap& bitmap, double seconds) {
     const auto actual = pixels(bitmap);
+    const auto flatBefore = pixels(*flatSurface);
+    const auto curvedBefore = pixels(*curvedSurface);
+    const auto frameBefore = pixels(*frameSurface);
     auto* cached = completedFrames[cursorAt(seconds) ? 1 : 0].get();
     check(cached != nullptr && actual == pixels(*cached), "cached frame is copied pixel-for-pixel");
     Bitmap fresh(bitmap.GetWidth(), bitmap.GetHeight(), PixelFormat32bppARGB);
@@ -69,6 +72,11 @@ void checkFresh(Bitmap& bitmap, double seconds) {
           sceneAt(seconds), cursorAt(seconds)), "fresh render succeeds"); }
     const auto difference = compareRenders(actual, pixels(fresh));
     if (!equivalentRenders(difference, actual.size() / 4)) {
+        const auto flatDifference = compareRenders(flatBefore, pixels(*flatSurface));
+        const auto curvedDifference = compareRenders(curvedBefore, pixels(*curvedSurface));
+        const auto frameDifference = compareRenders(frameBefore, pixels(*frameSurface));
+        std::cerr << "Intermediate changed pixels: flat=" << flatDifference.pixels
+            << ", curved=" << curvedDifference.pixels << ", housing=" << frameDifference.pixels << '\n';
         throw std::runtime_error("Cached/fresh pixel mismatch at " + std::to_string(bitmap.GetWidth()) + "x" +
             std::to_string(bitmap.GetHeight()) + ", time " + std::to_string(seconds) +
             ": changed pixels=" + std::to_string(difference.pixels) + ", max difference=" +
