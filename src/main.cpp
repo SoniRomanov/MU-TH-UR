@@ -167,11 +167,16 @@ void fill(Graphics& g, float x, float y, float w, float h, Color color) {
     SolidBrush b(color); g.FillRectangle(&b, x, y, w, h);
 }
 void text(Graphics& g, const std::string& s, float x, float y, float size, Color color, bool /*glow*/ = false) {
-    FontFamily family(L"Lucida Console"); Font font(&family, size, FontStyleRegular, UnitPixel);
+    FontFamily family(L"Lucida Console");
     StringFormat format(StringFormat::GenericTypographic());
     const auto value = wide(s);
     SolidBrush brush(color);
-    g.DrawString(value.c_str(), -1, &font, PointF(x, y), &format, &brush);
+    // Rasterize outlines consistently: DrawString's grid-fitted glyph cache
+    // can change individual pixels between identical off-screen renders.
+    GraphicsPath glyphs;
+    glyphs.AddString(value.c_str(), static_cast<INT>(value.size()), &family,
+        FontStyleRegular, size, PointF(x, y), &format);
+    g.FillPath(&brush, &glyphs);
 }
 void toggleFullscreen(HWND window) {
     if (!fullscreen) {
