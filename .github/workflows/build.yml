@@ -52,6 +52,5 @@ jobs:
 
           Download MU-TH-UR-Windows.zip, extract it, and run MU-TH-UR.exe. Keep the assets folder beside the executable.
 
-          The Windows build passed the story, save, audio-asset, and off-screen rendering checks.
           "@ | Set-Content build/release-notes.txt
           gh release create "$env:GITHUB_REF_NAME" build/MU-TH-UR-Windows.zip build/MU-TH-UR-source.zip --verify-tag --title "MU/TH/UR $env:GITHUB_REF_NAME" --notes-file build/release-notes.txt
